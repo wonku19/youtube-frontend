@@ -10,7 +10,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolder, faLightbulb } from "@fortawesome/free-regular-svg-icons";
 import { useEffect, useState } from "react";
-import { getCategories } from "../api/video";
+import { getCategories, getVideos } from "../api/video";
 
 const StyledAside = styled.aside`
   display: none;
@@ -201,8 +201,14 @@ const Home = () => {
     setCategories(result.data);
   };
 
+  const videoAPI = async () => {
+    const result = await getVideos();
+    setVideos(result.data);
+  };
+
   useEffect(() => {
     categoryAPI();
+    videoAPI();
     // fetch("http://localhost:8080/api/category")
     //   .then((response) => response.json())
     //   .then((json) => {
@@ -267,87 +273,50 @@ const Home = () => {
           <a href="#">음악</a>
         </nav>
         <section>
-          {/* <a href="#" className="video-content">
-                        <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                            <source src="./resource/video.mp4" type="video/mp4" />
-                        </video>
-                        <div className="video-summary">
-                            <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                            <div className="video-desc">
-                                <h3>"한국 사람들은 소풍가서 이렇게 먹어?! 캐나다에서 김밥 팔자는 엄마.." 김밥에 라면 처음 먹어본 캐나다 가족 반응! 라면 국물에 김밥 찍어먹더니.. 외국인 김밥먹방 [국제커플]</h3>
-                                <p>tvN</p>
-                                <p>
-                                    조회수 <span>9.1만</span>회 .
-                                    <span>1일</span>전
-                                </p>
-                            </div>
-                        </div>
-                    </a> */}
+          {VideoColorSpace.map((video) => (
+            <a href="#" className="video-content" key={video.videoCode}>
+              <video
+                width="100%"
+                poster={"/upload/" + video.videoPhoto}
+                autoPlay
+                loop
+                controls
+              >
+                <source src={video.videoUrl} type="video/mp4" />
+              </video>
+              <div className="video-summary">
+                <img
+                  src={"/upload/" + video.channel.channelPhoto}
+                  alt="채널이미지"
+                />
+                <div className="video-desc">
+                  <h3>{video.videoTitle}</h3>
+                  <p>{video.channel.nhannelName}</p>
+                  <p>
+                    조회수 <span>{video.videoViews}</span>회 · <span>1일</span>
+                    전
+                  </p>
+                </div>
+              </div>
+            </a>
+          ))}
 
-          {/* <a href="#" className="video-content">
-                <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                    <source src="./resource/video.mp4" type="video/mp4"/>
-                </video>
-                <div className="video-summary">
-                    <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                    <div className="video-desc">
-                        <h3>부산촌놈 마지막화..!</h3>
-                        <p>tvN</p>
-                        <p>
-                            조회수 <span>9.1만</span>회 .
-                            <span>1일</span>전
-                        </p>
-                    </div>
-                </div>
-            </a>
-            <a href="#" className="video-content">
-                <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                    <source src="./resource/video.mp4" type="video/mp4"/>
-                </video>
-                <div className="video-summary">
-                    <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                    <div className="video-desc">
-                        <h3>부산촌놈 마지막화..!</h3>
-                        <p>tvN</p>
-                        <p>
-                            조회수 <span>9.1만</span>회 .
-                            <span>1일</span>전
-                        </p>
-                    </div>
-                </div>
-            </a>
-            <a href="#" className="video-content">
-                <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                    <source src="./resource/video.mp4" type="video/mp4"/>
-                </video>
-                <div className="video-summary">
-                    <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                    <div className="video-desc">
-                        <h3>부산촌놈 마지막화..!</h3>
-                        <p>tvN</p>
-                        <p>
-                            조회수 <span>9.1만</span>회 .
-                            <span>1일</span>전
-                        </p>
-                    </div>
-                </div>
-            </a>
-            <a href="#" className="video-content">
-                <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                    <source src="./resource/video.mp4" type="video/mp4"/>
-                </video>
-                <div className="video-summary">
-                    <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                    <div className="video-desc">
-                        <h3>부산촌놈 마지막화..!</h3>
-                        <p>tvN</p>
-                        <p>
-                            조회수 <span>9.1만</span>회 .
-                            <span>1일</span>전
-                        </p>
-                    </div>
-                </div>
-            </a> */}
+          {/*  { <a href="#" className="video-content">
+                 <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
+                     <source src="./resource/video.mp4" type="video/mp4"/>
+                 </video>
+                 <div className="video-summary">
+                     <img src="./resource/thumbnail.jpg" alt="채널이미지" />
+                     <div className="video-desc">
+                         <h3>부산촌놈 마지막화..!</h3>
+                         <p>tvN</p>
+                         <p>
+                             조회수 <span>9.1만</span>회 .
+                             <span>1일</span>전
+                         </p>
+                     </div>
+                 </div>
+             </a> */}
         </section>
       </MainContent>
     </StyledMain>
