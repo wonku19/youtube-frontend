@@ -10,8 +10,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFolder, faLightbulb } from "@fortawesome/free-regular-svg-icons";
 import { useEffect, useState } from "react";
-import { getCategories, getVideos } from "../api/video";
-
+import { getCategories, getVideoes } from "../api/video";
+import { useInView } from "react-intersection-observer"; //무한페이지
 const StyledAside = styled.aside`
   display: none;
   position: fixed;
@@ -19,39 +19,48 @@ const StyledAside = styled.aside`
   width: 70px;
   overflow-y: auto;
   height: 100%;
+
   &::-webkit-scrollbar {
     width: 10px;
   }
+
   &::-webkit-scrollbar-thumb {
     background-color: #999;
     border-radius: 10px;
   }
+
   &::-webkit-scrollbar-track {
     background-color: white;
   }
+
   a {
     display: block;
     text-align: center;
     padding: 10px;
     border-radius: 5px;
     margin: 10px;
+
     &:hover {
       background-color: #eee;
     }
+
     p {
       margin-top: 5px;
       font-size: 0.8rem;
     }
   }
+
   .aside-category,
   footer {
     display: none;
   }
 `;
+
 const MainContent = styled.div`
   &.main-content {
     padding-left: 70px;
   }
+
   nav {
     position: fixed;
     background-color: white;
@@ -73,6 +82,7 @@ const MainContent = styled.div`
       }
     }
   }
+
   section {
     padding-top: 56px;
     display: flex;
@@ -94,12 +104,14 @@ const MainContent = styled.div`
       .video-summary {
         display: flex;
         margin-top: 10px;
+
         img {
           width: 50px;
           height: 50px;
           border-radius: 50%;
           border-radius: 50%;
           margin-right: 10px;
+
           .video-desc h3 {
             line-height: 1.4;
             overflow: hidden;
@@ -108,6 +120,7 @@ const MainContent = styled.div`
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
+
             p {
               font-size: 0.9rem;
               color: #333;
@@ -119,12 +132,15 @@ const MainContent = styled.div`
     }
   }
 `;
+
 const StyledMain = styled.main`
   padding-top: 56px;
   display: flex;
+
   &.aside-change {
     aside {
       width: 70px;
+
       a {
         flex-direction: column;
         p {
@@ -132,21 +148,26 @@ const StyledMain = styled.main`
           margin-top: 5px;
         }
       }
+
       .aside-category {
         display: none;
       }
+
       footer {
         display: none;
       }
     }
+
     main-content {
       padding-left: 70px;
     }
   }
+
   @media screen and (min-width: 927px) {
     aside {
       display: block;
     }
+
     section {
       justify-content: flex-start;
     }
@@ -193,29 +214,66 @@ const StyledMain = styled.main`
     }
   }
 `;
+
 const Home = () => {
   const [categories, setCategories] = useState([]);
-
+  const [videoes, setVideoes] = useState([]);
+  const [page, setPage] = useState(1);
+  const [category, setCategory] = useState(null);
+  const [ref, inView] = useInView();
   const categoryAPI = async () => {
     const result = await getCategories();
     setCategories(result.data);
   };
 
   const videoAPI = async () => {
-    const result = await getVideos();
-    setVideos(result.data);
+    // 데이터베이스 연결해야하는 부분
+    // -> spring + mybatis (동적쿼리) / spring boot + jpa(jql,@Query)
+    // -> QueryDSL
+    const result = await getVideoes(page, category);
+    console.log(result.data);
+    setVideoes([...videoes, ...result.data]);
+  };
+  const categoryFilterAPI = async () => {
+    const result = await getVideoes(page, category);
+    setVideoes(result.data);
   };
 
+  // const formData = new FormData();
+  // formData.append("title", title);
+  // formData.append("dese", desc);
+  // formData.append("image", image);
+  // formData.append("video", video);
+  // formData.append("categoryCode", parseInt(select));
+  // addVideo(formData);
   useEffect(() => {
     categoryAPI();
-    videoAPI();
-    // fetch("http://localhost:8080/api/category")
-    //   .then((response) => response.json())
-    //   .then((json) => {
+    // videoAPI();
+    // fetch("http://localhost:8080/api/category").then(response => response.json()).then((json) => {
     //     console.log(json);
     //     setCategories(json);
-    //   });
+    // });
   }, []);
+  useEffect(() => {
+    if (inView) {
+      console.log(`${inView}: 무한 스크롤 요청이 들어가야하는 부분`);
+      videoAPI();
+      setPage(page + 1);
+    }
+  }, [inView]);
+  useEffect(() => {
+    if (category !== null) {
+      console.log(category);
+      categoryFilterAPI();
+    }
+  }, [category]);
+  const filterCategory = (e) => {
+    e.preventDefault();
+    const href = e.target.href.split("/");
+    console.log(href[href.length - 1]);
+    setCategory(parseInt(href[href.length - 1]));
+    setPage(1);
+  };
 
   return (
     <StyledMain>
@@ -227,7 +285,6 @@ const Home = () => {
           </a>
           <a href="#">
             <FontAwesomeIcon icon={faFolder} />
-
             <p>구독</p>
           </a>
         </div>
@@ -248,6 +305,7 @@ const Home = () => {
               ) : category.categoryCode === 6 ? (
                 <FontAwesomeIcon icon={faLightbulb} />
               ) : null}
+
               <p>{category.categoryName}</p>
             </a>
           ))}
@@ -265,15 +323,17 @@ const Home = () => {
             전체
           </a>
           {categories.map((category) => (
-            <a href="#" key={category.categoryCode}>
+            <a
+              href={category.categoryCode}
+              onClick={filterCategory}
+              key={category.categoryCode}
+            >
               {category.categoryName}
             </a>
           ))}
-          <a href="#">쇼핑</a>
-          <a href="#">음악</a>
         </nav>
         <section>
-          {VideoColorSpace.map((video) => (
+          {videoes.map((video) => (
             <a href="#" className="video-content" key={video.videoCode}>
               <video
                 width="100%"
@@ -282,7 +342,7 @@ const Home = () => {
                 loop
                 controls
               >
-                <source src={video.videoUrl} type="video/mp4" />
+                <source src={"/upload/" + video.videoUrl} type="video/mp4" />
               </video>
               <div className="video-summary">
                 <img
@@ -291,32 +351,15 @@ const Home = () => {
                 />
                 <div className="video-desc">
                   <h3>{video.videoTitle}</h3>
-                  <p>{video.channel.nhannelName}</p>
+                  <p>{video.channel.channelName}</p>
                   <p>
-                    조회수 <span>{video.videoViews}</span>회 · <span>1일</span>
-                    전
+                    조회수 <span>4</span>회 .<span>1일</span>전
                   </p>
                 </div>
               </div>
             </a>
           ))}
-
-          {/*  { <a href="#" className="video-content">
-                 <video width="100%" poster="./resource/thumbnail.jpg" autoPlay loop controls>
-                     <source src="./resource/video.mp4" type="video/mp4"/>
-                 </video>
-                 <div className="video-summary">
-                     <img src="./resource/thumbnail.jpg" alt="채널이미지" />
-                     <div className="video-desc">
-                         <h3>부산촌놈 마지막화..!</h3>
-                         <p>tvN</p>
-                         <p>
-                             조회수 <span>9.1만</span>회 .
-                             <span>1일</span>전
-                         </p>
-                     </div>
-                 </div>
-             </a> */}
+          <div ref={ref}></div>
         </section>
       </MainContent>
     </StyledMain>

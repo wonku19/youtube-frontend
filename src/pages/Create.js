@@ -38,7 +38,7 @@ const Create = () => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("desc", desc);
-    formData.append("image", imagae);
+    formData.append("image", image);
     formData.append("video", video);
     formData.append("categoryCode", parseInt(select));
 
