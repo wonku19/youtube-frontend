@@ -1,17 +1,21 @@
 import styled from "styled-components";
+import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBagShopping,
   faClapperboard,
   faGamepad,
   faHouse,
+  faLightbulb,
   faMedal,
   faMusic,
 } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFolder, faLightbulb } from "@fortawesome/free-regular-svg-icons";
+import { faFolder } from "@fortawesome/free-regular-svg-icons";
 import { useEffect, useState } from "react";
-import { getCategories, getVideoes } from "../api/video";
-import { useInView } from "react-intersection-observer"; //무한페이지
+import { getCategories, getVideos } from "../api/video";
+import { useInView } from "react-intersection-observer";
+import { Link } from "react-router-dom";
+
 const StyledAside = styled.aside`
   display: none;
   position: fixed;
@@ -23,12 +27,10 @@ const StyledAside = styled.aside`
   &::-webkit-scrollbar {
     width: 10px;
   }
-
   &::-webkit-scrollbar-thumb {
     background-color: #999;
     border-radius: 10px;
   }
-
   &::-webkit-scrollbar-track {
     background-color: white;
   }
@@ -39,11 +41,9 @@ const StyledAside = styled.aside`
     padding: 10px;
     border-radius: 5px;
     margin: 10px;
-
     &:hover {
       background-color: #eee;
     }
-
     p {
       margin-top: 5px;
       font-size: 0.8rem;
@@ -55,12 +55,10 @@ const StyledAside = styled.aside`
     display: none;
   }
 `;
-
 const MainContent = styled.div`
   &.main-content {
     padding-left: 70px;
   }
-
   nav {
     position: fixed;
     background-color: white;
@@ -87,6 +85,7 @@ const MainContent = styled.div`
     padding-top: 56px;
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
 
     .video-content {
       display: block;
@@ -109,10 +108,11 @@ const MainContent = styled.div`
           width: 50px;
           height: 50px;
           border-radius: 50%;
-          border-radius: 50%;
           margin-right: 10px;
+        }
 
-          .video-desc h3 {
+        .video-desc {
+          h3 {
             line-height: 1.4;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -120,12 +120,12 @@ const MainContent = styled.div`
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
+          }
 
-            p {
-              font-size: 0.9rem;
-              color: #333;
-              line-height: 1.2;
-            }
+          p {
+            font-size: 0.9rem;
+            color: #333;
+            line-height: 1.2;
           }
         }
       }
@@ -140,7 +140,6 @@ const StyledMain = styled.main`
   &.aside-change {
     aside {
       width: 70px;
-
       a {
         flex-direction: column;
         p {
@@ -148,7 +147,6 @@ const StyledMain = styled.main`
           margin-top: 5px;
         }
       }
-
       .aside-category {
         display: none;
       }
@@ -157,8 +155,7 @@ const StyledMain = styled.main`
         display: none;
       }
     }
-
-    main-content {
+    .main-content {
       padding-left: 70px;
     }
   }
@@ -167,48 +164,38 @@ const StyledMain = styled.main`
     aside {
       display: block;
     }
-
     section {
       justify-content: flex-start;
     }
   }
-
   @media screen and (min-width: 1350px) {
     aside {
       width: 200px;
     }
-
     aside a {
       display: flex;
     }
-
     aside a svg {
       width: 30px;
       margin-right: 20px;
     }
-
     aside a p {
       margin-top: 0;
       font-size: 1rem;
     }
-
     .main-content {
       padding-left: 200px;
     }
-
     .aside-category {
       display: block;
     }
-
     .aside-category h2 {
       margin: 22px 22px 0;
     }
-
     footer {
       display: block;
       margin: 22px;
     }
-
     .video-content {
       max-width: 390px;
     }
@@ -217,62 +204,67 @@ const StyledMain = styled.main`
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
-  const [videoes, setVideoes] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState(null);
-  const [ref, inView] = useInView();
+
+  const hasScrollbar = () => {
+    return document.documentElement.scrollHeight > window.innerHeight;
+  };
+
+  const [ref, inView] = useInView({
+    skip: !hasScrollbar(), // 스크롤이 없을 경우 skip
+  });
+
   const categoryAPI = async () => {
     const result = await getCategories();
     setCategories(result.data);
   };
 
   const videoAPI = async () => {
-    // 데이터베이스 연결해야하는 부분
-    // -> spring + mybatis (동적쿼리) / spring boot + jpa(jql,@Query)
-    // -> QueryDSL
-    const result = await getVideoes(page, category);
+    const result = await getVideos(page, category);
     console.log(result.data);
-    setVideoes([...videoes, ...result.data]);
-  };
-  const categoryFilterAPI = async () => {
-    const result = await getVideoes(page, category);
-    setVideoes(result.data);
+    setVideos([...videos, ...result.data]);
   };
 
-  // const formData = new FormData();
-  // formData.append("title", title);
-  // formData.append("dese", desc);
-  // formData.append("image", image);
-  // formData.append("video", video);
-  // formData.append("categoryCode", parseInt(select));
-  // addVideo(formData);
+  const categoryFilterAPI = async () => {
+    const result = await getVideos(page, category);
+    setVideos(result.data);
+  };
+
   useEffect(() => {
     categoryAPI();
-    // videoAPI();
-    // fetch("http://localhost:8080/api/category").then(response => response.json()).then((json) => {
-    //     console.log(json);
-    //     setCategories(json);
-    // });
+    videoAPI();
+    //fetch("http://localhost:8080/api/category")
+    //.then((response) => response.json())
+    //.then((json) => {
+    // console.log(json);
+    //setCategories(json);
+    //});
   }, []);
+
   useEffect(() => {
     if (inView) {
-      console.log(`${inView}: 무한 스크롤 요청이 들어가야하는 부분`);
+      console.log(`${inView} : 무한 스크롤 요청이 들어가야하는 부분!`);
       videoAPI();
       setPage(page + 1);
     }
   }, [inView]);
+
   useEffect(() => {
-    if (category !== null) {
+    if (category != null) {
       console.log(category);
-      categoryFilterAPI();
+      videoAPI();
     }
   }, [category]);
+
   const filterCategory = (e) => {
     e.preventDefault();
     const href = e.target.href.split("/");
     console.log(href[href.length - 1]);
     setCategory(parseInt(href[href.length - 1]));
     setPage(1);
+    setVideos([]);
   };
 
   return (
@@ -305,18 +297,12 @@ const Home = () => {
               ) : category.categoryCode === 6 ? (
                 <FontAwesomeIcon icon={faLightbulb} />
               ) : null}
-
               <p>{category.categoryName}</p>
             </a>
           ))}
-
-          <a href="#">
-            <i className="fa-solid fa-music"></i>
-          </a>
         </div>
         <footer>개인정보처리방침</footer>
       </StyledAside>
-
       <MainContent className="main-content">
         <nav>
           <a href="#" className="active">
@@ -333,8 +319,12 @@ const Home = () => {
           ))}
         </nav>
         <section>
-          {videoes.map((video) => (
-            <a href="#" className="video-content" key={video.videoCode}>
+          {videos.map((video, index) => (
+            <Link
+              to={"/watch/" + video.videoCode}
+              className="video-content"
+              key={video.videoCode}
+            >
               <video
                 width="100%"
                 poster={"/upload/" + video.videoPhoto}
@@ -353,11 +343,14 @@ const Home = () => {
                   <h3>{video.videoTitle}</h3>
                   <p>{video.channel.channelName}</p>
                   <p>
-                    조회수 <span>4</span>회 .<span>1일</span>전
+                    조회수
+                    <span>{video.videoViews}</span>
+                    회ㆍ
+                    <span>1일</span>전
                   </p>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
           <div ref={ref}></div>
         </section>
@@ -365,5 +358,4 @@ const Home = () => {
     </StyledMain>
   );
 };
-
 export default Home;
